@@ -1,33 +1,37 @@
-FROM php:7-fpm
+FROM php:7.0.33-fpm-alpine
 
-ENV TZ Asia/Jakarta
+
+ENV TZ="Asia/Jakarta"
+ENV DEBIAN_FRONTEND="noninteractive"
+
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libcurl4 \
-    libcurl4-openssl-dev \
-    libfreetype6-dev \
-    libicu-dev \
-    libjpeg62-turbo-dev \
+RUN apk update && apk add --no-cache \
+    build-base \
+    curl-dev \
+    freetype-dev \
+    icu-dev \
+    jpeg-dev \
     libmcrypt-dev \
-    libonig-dev \
+    php7-mcrypt \
+    oniguruma-dev \
     libpng-dev \
-    libpq-dev \
+    postgresql-dev \
     libwebp-dev \
-    libxml2-dev \ 
-    libzip-dev \    
+    libxml2-dev \
+    libzip-dev \
     jpegoptim optipng pngquant gifsicle \
+    ssmtp \
     zip \
     unzip \
-    zlib1g-dev \
-    sendmail \
+    zlib-dev \
     nano \
     wget \
-    curl
+    curl \
+    iputils \
+    nmap
+
 RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg
-RUN docker-php-ext-configure pdo_mysql --with-pdo-mysql=mysqlnd
-RUN docker-php-ext-configure mysqli --with-mysqli=mysqlnd
 RUN docker-php-ext-configure intl
 RUN docker-php-ext-configure zip
 RUN docker-php-ext-install -j$(nproc) \ 
@@ -37,28 +41,19 @@ RUN docker-php-ext-install -j$(nproc) \
     pdo_mysql \
     pgsql \
     pdo_pgsql \
-    xmlrpc \ 
     zip \
-    opcache \
     soap \
     bcmath \
     mbstring \
     pcntl \
-    intl
-RUN yes | pecl install \
-    apcu \
-    xdebug
+    xmlrpc \
+    intl \
+    mcrypt
 RUN docker-php-ext-enable \
     mysqli \
     pdo \   
     pdo_mysql \
     pgsql \
     pdo_pgsql \
-    apcu \
-    xdebug    
-RUN echo "sendmail_path=/usr/sbin/sendmail -t -i" >> /usr/local/etc/php/conf.d/sendmail.ini  \
-    && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini
-RUN sed -i '/#!\/bin\/sh/aservice sendmail restart' /usr/local/bin/docker-php-entrypoint
-RUN sed -i '/#!\/bin\/sh/aecho "$(hostname -i)\t$(hostname) $(hostname).localhost" >> /etc/hosts' /usr/local/bin/docker-php-entrypoint
+    mcrypt
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer

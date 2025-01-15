@@ -1,0 +1,28 @@
+{
+  "nuxt.isNuxtApp": false,
+  "cSpell.words": [
+    "bcmath",
+    "dockerhub",
+    "freetype",
+    "gifsicle",
+    "iputils",
+    "jpegoptim",
+    "libmcrypt",
+    "libwebp",
+    "libzip",
+    "localtime",
+    "mbstring",
+    "mcrypt",
+    "mysqli",
+    "nmap",
+    "noninteractive",
+    "optipng",
+    "pcntl",
+    "pecl",
+    "pgsql",
+    "pngquant",
+    "ssmtp",
+    "yohannaftali",
+    "zoneinfo"
+  ]
+}
