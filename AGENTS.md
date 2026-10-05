@@ -61,6 +61,8 @@ scripts/dockerhub-update.sh|.ps1 # bash / PowerShell wrappers around `uv run`
   `tzdata` must be installed or the timezone silently stays UTC; Composer is pinned to `2.2` (the LTS
   line that still runs on PHP 7.0, `composer:latest` aborts). Do not unpin. Other behavior belongs to the
   upstream image; do not fork its entrypoint.
+- PHP `date.timezone` is deliberately **not** set (stays UTC, decided 2026-10-05: keep PHP datetime-agnostic).
+  `TZ=Asia/Jakarta` only affects the OS clock. Do not add `date.timezone` without asking.
 - Pinned versions go through the `PHP_VERSION` build arg, not separate Dockerfiles.
 - Python scripts are stdlib-only and run through `uv` (`uv run scripts/dockerhub_update.py`);
   bash and PowerShell wrappers must stay thin and behave identically.
@@ -72,7 +74,8 @@ scripts/dockerhub-update.sh|.ps1 # bash / PowerShell wrappers around `uv run`
 ```bash
 docker build -t php-test .
 docker run --rm php-test php -v                       # PHP 7.0.33
-docker run --rm php-test date +%Z                     # WIB
+docker run --rm php-test date +%Z                     # WIB (OS)
+docker run --rm php-test php -r 'echo date_default_timezone_get();'   # UTC (by design)
 docker run --rm php-test composer --version          # runs (2.2 LTS)
 docker run --rm php-test php-fpm -t                    # config valid
 uv run scripts/dockerhub_update.py status             # needs .env; read-only

@@ -26,7 +26,7 @@ API = "https://hub.docker.com/v2"
 REPO = os.environ.get("DOCKERHUB_REPO", "php7.0.33-fpm")
 SHORT_DESCRIPTION = os.environ.get(
     "SHORT_DESCRIPTION",
-    "PHP 7.0.33-FPM (Alpine) for legacy CodeIgniter 2 apps: mcrypt, Composer 2.2, Asia/Jakarta timezone.",
+    "PHP 7.0.33-FPM (Alpine) for legacy CodeIgniter 2 apps: mcrypt, Composer 2.2. OS time Asia/Jakarta.",
 )
 
 

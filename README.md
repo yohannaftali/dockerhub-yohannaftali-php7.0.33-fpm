@@ -3,7 +3,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/yohannaftali/php7.0.33-fpm)](https://hub.docker.com/r/yohannaftali/php7.0.33-fpm)
 [![Docker Image Size](https://img.shields.io/docker/image-size/yohannaftali/php7.0.33-fpm/latest)](https://hub.docker.com/r/yohannaftali/php7.0.33-fpm)
 
-[PHP 7.0.33-FPM](https://hub.docker.com/_/php) (Alpine) image for legacy applications such as CodeIgniter 2, preconfigured with the **Asia/Jakarta (WIB, UTC+7)** timezone, the extensions those apps usually need (including `mcrypt`) and Composer 2.2.
+[PHP 7.0.33-FPM](https://hub.docker.com/_/php) (Alpine) image for legacy applications such as CodeIgniter 2, with the container clock set to **Asia/Jakarta (WIB, UTC+7)**; PHP itself stays on UTC (see Overview), the extensions those apps usually need (including `mcrypt`) and Composer 2.2.
 
 - Docker Hub: <https://hub.docker.com/r/yohannaftali/php7.0.33-fpm>
 - Source code (Dockerfile, build workflow, scripts): <https://github.com/yohannaftali/dockerhub-yohannaftali-php7.0.33-fpm>
@@ -31,7 +31,7 @@ services:
 
 Built `FROM php:7.0.33-fpm-alpine` and adds:
 
-- **Timezone**: `TZ=Asia/Jakarta` (with `tzdata` installed, so `date` and PHP report WIB).
+- **Timezone**: `TZ=Asia/Jakarta` for the operating system (`date`, logs, cron). PHP's `date.timezone` is intentionally left at its default, UTC, so applications stay timezone-agnostic. Set `date_default_timezone_set()` or `date.timezone` yourself if you need local time.
 - **Extensions**: `gd` (freetype, jpeg), `mysqli`, `pdo`, `pdo_mysql`, `pgsql`, `pdo_pgsql`, `zip`, `soap`, `bcmath`, `mbstring`, `pcntl`, `xmlrpc`, `intl`, `mcrypt`.
 - **Composer 2.2** (the LTS line; Composer 2.3 and later no longer run on PHP 7.0).
 - **Tools**: `nano`, `wget`, `curl`, `zip`, `unzip`, `iputils`, `nmap`, and `jpegoptim`, `optipng`, `pngquant`, `gifsicle`.
@@ -71,6 +71,7 @@ Verify the image:
 ```bash
 docker run --rm yohannaftali/php7.0.33-fpm php -v
 docker run --rm yohannaftali/php7.0.33-fpm date +%Z      # WIB
+docker run --rm yohannaftali/php7.0.33-fpm php -r 'echo date_default_timezone_get();'   # UTC (by design)
 docker run --rm yohannaftali/php7.0.33-fpm composer --version
 docker run --rm yohannaftali/php7.0.33-fpm php -m
 ```

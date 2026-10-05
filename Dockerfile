@@ -2,7 +2,7 @@ ARG PHP_VERSION=7.0.33-fpm-alpine
 FROM php:${PHP_VERSION}
 
 LABEL org.opencontainers.image.title="php7.0.33-fpm" \
-      org.opencontainers.image.description="PHP 7.0.33-FPM (Alpine) for legacy CodeIgniter 2 apps with Composer 2.2 and Asia/Jakarta timezone" \
+      org.opencontainers.image.description="PHP 7.0.33-FPM (Alpine) for legacy CodeIgniter 2 apps with Composer 2.2, OS timezone Asia/Jakarta, PHP stays UTC" \
       org.opencontainers.image.authors="Yohan Naftali" \
       org.opencontainers.image.source="https://github.com/yohannaftali/dockerhub-yohannaftali-php7.0.33-fpm"
 

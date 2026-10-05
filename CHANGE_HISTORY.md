@@ -2,6 +2,9 @@
 
 Newest first. One dated entry per notable change.
 
+## [2026-10-05] — docs: PHP timezone stays UTC
+- Verified that PHP's `date()` reports UTC even though the OS clock is WIB (PHP ignores `TZ` and uses `date.timezone`). Decision: keep PHP on UTC so applications stay datetime-agnostic. README, labels, short description and `AGENTS.md` now say "OS timezone Asia/Jakarta, PHP stays UTC" instead of implying PHP runs on Jakarta time. No Dockerfile behavior change.
+
 ## [2026-10-05] — fix + chore: correct timezone and Composer, apply the shared repo setup
 - **Timezone fix**: the image reported `UTC`, not WIB. Alpine ships no `tzdata`, so the `/etc/localtime` symlink pointed at nothing. Added `tzdata` to the `apk add` list.
 - **Composer fix**: `COPY --from=composer:latest` gave a Composer that aborts on PHP 7.0 ("Composer 2.3.0 dropped support for PHP <7.2.5"). Pinned to `composer:2.2` (LTS); verified 2.2.30 runs.
