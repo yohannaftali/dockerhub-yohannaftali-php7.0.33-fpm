@@ -1,5 +1,10 @@
-FROM php:7.0.33-fpm-alpine
+ARG PHP_VERSION=7.0.33-fpm-alpine
+FROM php:${PHP_VERSION}
 
+LABEL org.opencontainers.image.title="php7.0.33-fpm" \
+      org.opencontainers.image.description="PHP 7.0.33-FPM (Alpine) for legacy CodeIgniter 2 apps with Composer 2.2 and Asia/Jakarta timezone" \
+      org.opencontainers.image.authors="Yohan Naftali" \
+      org.opencontainers.image.source="https://github.com/yohannaftali/dockerhub-yohannaftali-php7.0.33-fpm"
 
 ENV TZ="Asia/Jakarta"
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -26,6 +31,7 @@ RUN apk update && apk add --no-cache \
     unzip \
     zlib-dev \
     nano \
+    tzdata \
     wget \
     curl \
     iputils \
@@ -34,7 +40,7 @@ RUN apk update && apk add --no-cache \
 RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg
 RUN docker-php-ext-configure intl
 RUN docker-php-ext-configure zip
-RUN docker-php-ext-install -j$(nproc) \ 
+RUN docker-php-ext-install -j$(nproc) \
     gd \
     mysqli \
     pdo \
@@ -51,9 +57,9 @@ RUN docker-php-ext-install -j$(nproc) \
     mcrypt
 RUN docker-php-ext-enable \
     mysqli \
-    pdo \   
+    pdo \
     pdo_mysql \
     pgsql \
     pdo_pgsql \
     mcrypt
-COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer:2.2 /usr/bin/composer /usr/local/bin/composer
