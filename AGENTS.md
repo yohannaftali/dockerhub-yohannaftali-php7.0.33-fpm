@@ -17,7 +17,8 @@
 
 ## Big Picture
 
-A tiny repo that builds and publishes a [PHP-FPM](https://hub.docker.com/_/php) image (PHP 7.0.33, Alpine)
+A tiny repo that builds and publishes a PHP-FPM image (PHP 7.0.33 from Ondřej Surý's
+<https://packages.sury.org/php/> on `debian:trixie-slim`)
 for legacy CodeIgniter 2 apps, timezone Asia/Jakarta. There is no application code: the product
 is the Docker Hub image and its listing (overview, short description, tags, categories).
 
@@ -29,7 +30,7 @@ README.md  ──► peter-evans/dockerhub-description / scripts/dockerhub-updat
 ## Repository Layout
 
 ```
-Dockerfile                       # FROM php:${PHP_VERSION}; extensions, mcrypt, Composer 2.2, TZ=Asia/Jakarta
+Dockerfile                       # FROM debian:${DEBIAN_RELEASE}-slim + Sury php${PHP_VERSION}-*; Composer 2.2, TZ=Asia/Jakarta
 README.md                        # human docs AND the Docker Hub overview (synced as-is)
 AGENTS.md / CHANGE_HISTORY.md    # agent guide / dated history
 CLAUDE.md                        # points agents at this file
@@ -42,7 +43,7 @@ scripts/dockerhub-update.sh|.ps1 # bash / PowerShell wrappers around `uv run`
 
 ## Key Facts
 
-- **Tags** are the `include` matrix in `docker-publish.yml`: only `latest` (`php:7.0.33-fpm-alpine`).
+- **Tags** are the `include` matrix in `docker-publish.yml`: only `latest` (`php: "7.0"`, `debian: trixie`).
   Adding or dropping a version means editing that matrix **and** the Tags table in `README.md`.
 - The workflow runs on push to `main`, weekly (Mon 03:00 UTC, to pick up upstream fixes) and
   manually. The `description` job syncs `README.md` to Docker Hub after all builds pass.
@@ -57,13 +58,19 @@ scripts/dockerhub-update.sh|.ps1 # bash / PowerShell wrappers around `uv run`
 
 - Never commit `.env` or any token. `.env.example` holds names and placeholders only.
 - Never print tokens in output, logs or commit messages. Refer to them as `$TOKEN`.
-- Keep the Dockerfile close to the official image. Known constraints: PHP 7.0 and Alpine 3.7 are EOL;
-  `tzdata` must be installed or the timezone silently stays UTC; Composer is pinned to `2.2` (the LTS
-  line that still runs on PHP 7.0, `composer:latest` aborts). Do not unpin. Other behavior belongs to the
-  upstream image; do not fork its entrypoint.
-- PHP `date.timezone` is deliberately **not** set (stays UTC, decided 2026-10-05: keep PHP datetime-agnostic).
-  `TZ=Asia/Jakarta` only affects the OS clock. Do not add `date.timezone` without asking.
-- Pinned versions go through the `PHP_VERSION` build arg, not separate Dockerfiles.
+- PHP comes from Sury's Debian repo (`packages.sury.org/php`, keyring `debsuryorg-archive-keyring.deb`),
+  not the official `php` image. Its `php7.0` is 7.0.33 plus backported fixes; the weekly rebuild picks up
+  new package releases. The Dockerfile mimics the official `php:*-fpm` runtime contract: `CMD ["php-fpm"]`
+  (symlink to `php-fpm7.0`), foreground, `listen = 9000`, logs to stderr (`pool.d/zz-docker.conf`),
+  `WORKDIR /var/www/html`, `STOPSIGNAL SIGQUIT`. Keep that contract. No entrypoint script.
+- Known constraints: `tzdata` must be installed or the OS timezone silently stays UTC; Composer is pinned
+  to `2.2` (the LTS line that still runs on PHP 7.0, `composer:latest` aborts). Do not unpin. Debian builds
+  `pcntl` for the CLI only, not for FPM. `www-data` is UID 33 (Alpine was 82).
+- PHP stays on **UTC** (decided 2026-10-05: keep PHP datetime-agnostic). Debian's PHP follows `TZ` when
+  `date.timezone` is unset, so `conf.d/zz-docker-timezone.ini` pins `date.timezone = UTC` for cli and fpm.
+  `TZ=Asia/Jakarta` only affects the OS clock. Do not change PHP's timezone without asking.
+- Pinned versions go through the `PHP_VERSION` (Sury minor, e.g. `7.0`) and `DEBIAN_RELEASE` build args,
+  not separate Dockerfiles.
 - Python scripts are stdlib-only and run through `uv` (`uv run scripts/dockerhub_update.py`);
   bash and PowerShell wrappers must stay thin and behave identically.
 - Commit message ends with the attribution trailer configured for the session.
@@ -75,9 +82,10 @@ scripts/dockerhub-update.sh|.ps1 # bash / PowerShell wrappers around `uv run`
 docker build -t php-test .
 docker run --rm php-test php -v                       # PHP 7.0.33
 docker run --rm php-test date +%Z                     # WIB (OS)
-docker run --rm php-test php -r 'echo date_default_timezone_get();'   # UTC (by design)
+docker run --rm php-test php -r 'echo date_default_timezone_get();'   # UTC (pinned)
 docker run --rm php-test composer --version          # runs (2.2 LTS)
 docker run --rm php-test php-fpm -t                    # config valid
+docker run --rm php-test php-fpm -m                    # FPM extensions (no pcntl)
 uv run scripts/dockerhub_update.py status             # needs .env; read-only
 ```
 

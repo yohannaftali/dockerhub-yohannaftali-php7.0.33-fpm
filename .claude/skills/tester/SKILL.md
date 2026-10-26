@@ -33,7 +33,7 @@ docker run --rm php70-test php -m                         # gd intl mysqli pdo_m
 docker run --rm php70-test composer --version             # must run on PHP 7.0 (Composer 2.2 LTS)
 docker run --rm php70-test php-fpm -t                     # config test is successful
 ```
-Also build with `--build-arg PHP_VERSION=7.0.33-fpm-alpine` explicitly.
+Also build with `--build-arg PHP_VERSION=7.0 --build-arg DEBIAN_RELEASE=trixie` explicitly, and check `php-fpm -m` (FPM loads the same extensions as the CLI except `pcntl`).
 For workflow changes: validate the YAML and check the matrix matches the README Tags table.
 For script changes: run `status`/`tags` (read-only) with `.env`.
 Always clean up test containers and images you created.

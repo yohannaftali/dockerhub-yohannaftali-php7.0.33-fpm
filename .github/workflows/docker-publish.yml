@@ -17,7 +17,8 @@ jobs:
       matrix:
         include:
           - tag: latest
-            php: 7.0.33-fpm-alpine
+            php: "7.0"
+            debian: trixie
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
@@ -30,7 +31,9 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          build-args: PHP_VERSION=${{ matrix.php }}
+          build-args: |
+            PHP_VERSION=${{ matrix.php }}
+            DEBIAN_RELEASE=${{ matrix.debian }}
           tags: ${{ env.IMAGE }}:${{ matrix.tag }}
           push: true
 
@@ -44,5 +47,5 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: yohannaftali/php7.0.33-fpm
-          short-description: "PHP 7.0.33-FPM (Alpine) for legacy CodeIgniter 2 apps: mcrypt, Composer 2.2. OS time Asia/Jakarta."
+          short-description: "PHP 7.0.33-FPM (Debian, Sury packages) for legacy CodeIgniter 2: mcrypt, Composer 2.2, OS time WIB."
           readme-filepath: ./README.md

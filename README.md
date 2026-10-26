@@ -3,13 +3,13 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/yohannaftali/php7.0.33-fpm)](https://hub.docker.com/r/yohannaftali/php7.0.33-fpm)
 [![Docker Image Size](https://img.shields.io/docker/image-size/yohannaftali/php7.0.33-fpm/latest)](https://hub.docker.com/r/yohannaftali/php7.0.33-fpm)
 
-[PHP 7.0.33-FPM](https://hub.docker.com/_/php) (Alpine) image for legacy applications such as CodeIgniter 2, with the container clock set to **Asia/Jakarta (WIB, UTC+7)**; PHP itself stays on UTC (see Overview), the extensions those apps usually need (including `mcrypt`) and Composer 2.2.
+PHP 7.0.33-FPM image (Debian, packages from [Ondřej Surý](https://deb.sury.org/)) for legacy applications such as CodeIgniter 2, with the container clock set to **Asia/Jakarta (WIB, UTC+7)**; PHP itself stays on UTC (see Overview), the extensions those apps usually need (including `mcrypt`) and Composer 2.2.
 
 - Docker Hub: <https://hub.docker.com/r/yohannaftali/php7.0.33-fpm>
 - Source code (Dockerfile, build workflow, scripts): <https://github.com/yohannaftali/dockerhub-yohannaftali-php7.0.33-fpm>
 - Issues and feature requests: <https://github.com/yohannaftali/dockerhub-yohannaftali-php7.0.33-fpm/issues>
 
-> **Note:** PHP 7.0 (end of life since January 2019) and the Alpine 3.7 base (also EOL) no longer receive security fixes, and rebuilding does not change that. Use this image only for legacy applications that cannot be upgraded, and do not expose it to untrusted input without other mitigations.
+> **Note:** PHP 7.0 has been end of life upstream since January 2019. This image uses Ondřej Surý's `php7.0` packages, which backport selected security fixes, on a supported Debian base, and the weekly rebuild picks up new package releases. That is best effort, not a supported PHP release. Use this image only for legacy applications that cannot be upgraded, and do not expose it to untrusted input without other mitigations.
 
 ## Use this image
 
@@ -29,19 +29,30 @@ services:
 
 ## Overview
 
-Built `FROM php:7.0.33-fpm-alpine` and adds:
+Built `FROM debian:trixie-slim` with the `php7.0-*` packages from <https://packages.sury.org/php/>. It behaves like the official `php:*-fpm` images: `CMD ["php-fpm"]` runs in the foreground, listens on port `9000`, logs to stderr, and has workdir `/var/www/html`. It adds:
 
-- **Timezone**: `TZ=Asia/Jakarta` for the operating system (`date`, logs, cron). PHP's `date.timezone` is intentionally left at its default, UTC, so applications stay timezone-agnostic. Set `date_default_timezone_set()` or `date.timezone` yourself if you need local time.
-- **Extensions**: `gd` (freetype, jpeg), `mysqli`, `pdo`, `pdo_mysql`, `pgsql`, `pdo_pgsql`, `zip`, `soap`, `bcmath`, `mbstring`, `pcntl`, `xmlrpc`, `intl`, `mcrypt`.
+- **Timezone**: `TZ=Asia/Jakarta` for the operating system (`date`, logs, cron). PHP's `date.timezone` is pinned to `UTC` (Debian's PHP would otherwise follow `TZ`), so applications stay timezone-agnostic. Call `date_default_timezone_set()` or override `date.timezone` if you need local time.
+- **Extensions**: `gd` (freetype, jpeg), `mysqli`, `pdo`, `pdo_mysql`, `pgsql`, `pdo_pgsql`, `zip`, `soap`, `bcmath`, `mbstring`, `pcntl`, `xmlrpc`, `intl`, `mcrypt`, `curl`, `xml`. `pcntl` is available in the CLI only (Debian builds it for the CLI only, not for FPM).
 - **Composer 2.2** (the LTS line; Composer 2.3 and later no longer run on PHP 7.0).
 - **Tools**: `nano`, `wget`, `curl`, `zip`, `unzip`, `iputils`, `nmap`, and `jpegoptim`, `optipng`, `pngquant`, `gifsicle`.
 - **ssmtp** is installed but not configured; mount your own `/etc/ssmtp/ssmtp.conf` if you want PHP `mail()` to work.
+
+### Configuration paths (differ from the official image)
+
+| What | Path |
+| --- | --- |
+| Extra PHP ini (FPM / CLI) | `/etc/php/7.0/fpm/conf.d/` / `/etc/php/7.0/cli/conf.d/` |
+| `php.ini` | `/etc/php/7.0/fpm/php.ini` (Debian production defaults, `display_errors = Off`) |
+| FPM pools | `/etc/php/7.0/fpm/pool.d/` (`zz-docker.conf` sets port 9000 and logging) |
+| Binaries | `php`, `php-fpm` (symlink to `php-fpm7.0`), `composer` |
+
+`docker-php-ext-install` and `/usr/local/etc/php` do not exist. Install extra extensions with `apt-get install php7.0-<name>`. `www-data` is UID/GID 33 (the Alpine image used 82).
 
 ## Tags
 
 | Tag | Base image |
 | --- | --- |
-| `latest` | `php:7.0.33-fpm-alpine` |
+| `latest` | `debian:trixie-slim` + Sury `php7.0` (7.0.33) |
 
 ## Quick start
 
