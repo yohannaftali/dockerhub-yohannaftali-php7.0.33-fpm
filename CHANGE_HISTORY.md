@@ -2,6 +2,13 @@
 
 Newest first. One dated entry per notable change.
 
+## [2026-10-26] — feat: switch base to Debian + Ondřej Surý PHP packages
+- `Dockerfile`: `FROM debian:${DEBIAN_RELEASE}-slim` (default `trixie`) with `php${PHP_VERSION}-*` (default `7.0`) from `https://packages.sury.org/php/` instead of `php:7.0.33-fpm-alpine`. Reason: the official 7.0 image and its Alpine 3.7 base get no fixes. Sury's `php7.0` (7.0.33-93, built 2026-10-22) carries backported fixes and the weekly rebuild picks them up. amd64 and arm64 are both published by Sury.
+- Matches the official runtime contract: `CMD ["php-fpm"]` (symlink), foreground, port 9000, logs to stderr, `WORKDIR /var/www/html`, `STOPSIGNAL SIGQUIT`.
+- Debian's PHP follows `TZ` when `date.timezone` is unset (it reported `Asia/Jakarta`). Added `date.timezone = UTC` for cli/fpm to keep the 2026-10-05 decision.
+- Breaking for users: config moved to `/etc/php/7.0/...`, no `docker-php-ext-*` helpers, `www-data` UID 82 -> 33, Debian production `php.ini`, `pcntl` CLI-only. Dropped the unused `php7-mcrypt`/`-dev` build packages; `mcrypt` now comes from `php7.0-mcrypt`. Added `curl` and `xml` extensions.
+- Workflow matrix: `php: "7.0"`, `debian: trixie`; short description updated. README rewritten for the new base.
+
 ## [2026-10-05] — docs: PHP timezone stays UTC
 - Verified that PHP's `date()` reports UTC even though the OS clock is WIB (PHP ignores `TZ` and uses `date.timezone`). Decision: keep PHP on UTC so applications stay datetime-agnostic. README, labels, short description and `AGENTS.md` now say "OS timezone Asia/Jakarta, PHP stays UTC" instead of implying PHP runs on Jakarta time. No Dockerfile behavior change.
 
